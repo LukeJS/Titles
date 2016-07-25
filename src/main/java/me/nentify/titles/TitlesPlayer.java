@@ -29,7 +29,7 @@ public class TitlesPlayer {
 
     private Task task;
 
-    public TitlesPlayer(UUID uuid, String name, Titles plugin) {
+    public TitlesPlayer(UUID uuid, String name) {
         this.uuid = uuid;
         this.name = name;
 
@@ -49,7 +49,7 @@ public class TitlesPlayer {
                 .execute(onlineTrackerTask)
                 .interval(1, TimeUnit.MINUTES)
                 .name("Online Time Tracker: " + name)
-                .submit(plugin);
+                .submit(Titles.instance);
 
         // testing
         currentTitleType = Title.Type.ONLINE_TIME; // default

@@ -1,7 +1,7 @@
 package me.nentify.titles;
 
 import com.google.inject.Inject;
-import me.nentify.titles.commands.ChooseCommand;
+import me.nentify.titles.commands.TitlesCommand;
 import me.nentify.titles.events.BlockEventHandler;
 import me.nentify.titles.events.PlayerEventHandler;
 import me.nentify.titles.titles.Title;
@@ -14,6 +14,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 
 import java.util.Map;
@@ -21,19 +22,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
-/*
- * Titles:
- * - Block Breaker - Done
- * - Online Time - In Progress
- * - ???
- */
-
 @Plugin(id = Titles.PLUGIN_ID, name = Titles.PLUGIN_NAME, version = Titles.PLUGIN_VERSION)
 public class Titles {
 
     public static final String PLUGIN_ID = "titles";
     public static final String PLUGIN_NAME = "Titles";
     public static final String PLUGIN_VERSION = "0.3.0";
+
+    public static Titles instance;
 
     @Inject
     private Logger logger;
@@ -44,6 +40,8 @@ public class Titles {
     public void onPreIinit(GamePreInitializationEvent event) {
         logger.info("Starting " + PLUGIN_NAME + " v" + PLUGIN_VERSION);
 
+        instance = this;
+
         CommandSpec titlesCommandSpec = CommandSpec.builder()
                 .description(Text.of("Choose your title"))
                 .permission("titles.choose")
@@ -52,7 +50,7 @@ public class Titles {
                                 GenericArguments.enumValue(Text.of("titleType"), Title.Type.class)
                         )
                 )
-                .executor(new ChooseCommand())
+                .executor(new TitlesCommand())
                 .build();
 
         Sponge.getCommandManager().register(this, titlesCommandSpec, "titles", "title");
@@ -67,7 +65,7 @@ public class Titles {
         UUID uuid = player.getUniqueId();
 
         if (!titlesPlayers.containsKey(uuid)) {
-            titlesPlayers.put(uuid, new TitlesPlayer(uuid, player.getName(), this));
+            titlesPlayers.put(uuid, new TitlesPlayer(uuid, player.getName()));
         }
     }
 
@@ -90,5 +88,13 @@ public class Titles {
             return Optional.of(titlesPlayers.get(uuid));
 
         return Optional.empty();
+    }
+
+    public static void sendDelayedMessage(Player player, Text message) {
+        Task.Builder taskBuilder = Sponge.getScheduler().createTaskBuilder();
+        taskBuilder
+                .execute(() -> player.sendMessage(message))
+                .delayTicks(1)
+                .submit(instance);
     }
 }

@@ -1,5 +1,6 @@
 package me.nentify.titles.titles;
 
+import me.nentify.titles.Titles;
 import me.nentify.titles.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
 import org.spongepowered.api.entity.living.player.Player;
@@ -91,9 +92,9 @@ public abstract class Title {
 
     public void sendMessage(Player player) {
         if (getTier() == Tier.NOOB)
-            player.sendMessage(getUnlockMessage());
+            Titles.sendDelayedMessage(player, getUnlockMessage());
         else
-            player.sendMessage(getRankUpMessage());
+            Titles.sendDelayedMessage(player, getRankUpMessage());
     }
 
     public Text getUnlockMessage() {
@@ -103,7 +104,7 @@ public abstract class Title {
     }
 
     public Text getRankUpMessage() {
-        return Text.builder("Congratulations! Your title ").color(TextColors.GOLD)
+        return Text.builder("Congratulations! ").color(TextColors.GOLD)
                 .append(getChooseText())
                 .append(Text.of(TextColors.GOLD, " has ranked up to "))
                 .append(getTier().getText())

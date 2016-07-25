@@ -4,6 +4,7 @@ import me.nentify.titles.Titles;
 import me.nentify.titles.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
 import me.nentify.titles.titles.Title;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 public class PlayerEventHandler {
 
-    @Listener(order = Order.LAST)
+    @Listener(order = Order.LATE)
     public void onPlayerChat(MessageChannelEvent.Chat event, @First Player player) {
         Optional<TitlesPlayer> titlesPlayerOptional = Titles.getTitlesPlayer(player.getUniqueId());
 
@@ -29,9 +30,14 @@ public class PlayerEventHandler {
             // Format chat with custom title
             Text message = event.getMessage();
 
-            Text newMessage = Text.builder().append(titlesPlayer.getCurrentTitle().getPrefixText(false)).append(Text.of(" ")).append(message).build();
+            event.setCancelled(true);
 
-            event.setMessage(newMessage);
+            Sponge.getGame().getServer().getOnlinePlayers().stream().filter(x -> !x.getUniqueId().equals(titlesPlayer.getUUID())).forEach(x -> x.sendMessage(getTitledMessage(titlesPlayer, message, false)));
+            player.sendMessage(getTitledMessage(titlesPlayer, message, true));
         }
+    }
+
+    private Text getTitledMessage(TitlesPlayer titlesPlayer, Text message, boolean edit) {
+        return Text.builder().append(titlesPlayer.getCurrentTitle().getPrefixText(edit)).append(Text.of(" ")).append(message).build();
     }
 }
