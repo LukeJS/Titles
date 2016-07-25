@@ -3,6 +3,7 @@ package me.nentify.titles;
 import com.google.inject.Inject;
 import me.nentify.titles.commands.ChooseCommand;
 import me.nentify.titles.events.BlockEventHandler;
+import me.nentify.titles.events.PlayerEventHandler;
 import me.nentify.titles.titles.Title;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
@@ -57,6 +58,7 @@ public class Titles {
         Sponge.getCommandManager().register(this, titlesCommandSpec, "titles", "title");
 
         Sponge.getGame().getEventManager().registerListeners(this, new BlockEventHandler());
+        Sponge.getGame().getEventManager().registerListeners(this, new PlayerEventHandler());
     }
 
     @Listener
