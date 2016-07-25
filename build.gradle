@@ -1,0 +1,11 @@
+plugins {
+    id 'org.spongepowered.plugin' version '0.6'
+}
+
+group = 'me.nentify.titles'
+version = '0.2.0'
+description = 'Gain and wear titles'
+
+dependencies {
+    compile 'org.spongepowered:spongeapi:4.1.0'
+}
