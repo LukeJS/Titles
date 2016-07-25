@@ -24,26 +24,37 @@ public class ChooseCommand implements CommandExecutor {
             Player player = (Player) source;
             UUID uuid = player.getUniqueId();
 
-            Optional<TitlesPlayer> titlesPlayer = Titles.getTitlesPlayer(uuid);
+            Optional<TitlesPlayer> titlesPlayerOptional = Titles.getTitlesPlayer(uuid);
 
-            if (titlesPlayer.isPresent()) {
-                Map<Title.Type, Title> titles = titlesPlayer.get().getTitles();
+            if (titlesPlayerOptional.isPresent()) {
+                TitlesPlayer titlesPlayer = titlesPlayerOptional.get();
 
-                Text.Builder titlesList = Text.builder("Choose your title:\n");
+                if (args.hasAny("titleType")) {
+                    Title.Type titleType = args.<Title.Type>getOne("titleType").get();
 
-                Iterator<Title> iterator = titles.values().stream().filter(x -> x.getTier() != Title.Tier.UNRANKED).iterator();
+                    if (titlesPlayer.hasTitle(titleType) && titlesPlayer.getCurrentTitleType() != titleType) {
+                        titlesPlayer.setCurrentTitleType(titleType);
+                        player.sendMessage(Text.builder("You have set your title to: ").append(titlesPlayer.getCurrentTitle().getPrefixText(false)).build());
+                    }
+                } else {
+                    Map<Title.Type, Title> titles = titlesPlayer.getTitles();
+                    Text.Builder titlesList = Text.builder("Current title: ").append(titlesPlayer.getCurrentTitle().getPrefixText(false)).append(Text.of("\n"))
+                            .append(Text.of("Your titles:\n"));
 
-                while (iterator.hasNext()) {
-                    Title title = iterator.next();
-                    titlesList = titlesList.append(title.getChooseText());
+                    Iterator<Title> iterator = titles.values().stream().filter(x -> x.getTier() != Title.Tier.UNRANKED).iterator();
 
-                    if (iterator.hasNext())
-                        titlesList = titlesList.append(Text.of(", "));
+                    while (iterator.hasNext()) {
+                        Title title = iterator.next();
+                        titlesList = titlesList.append(title.getChooseText());
+
+                        if (iterator.hasNext())
+                            titlesList = titlesList.append(Text.of(", "));
+                    }
+
+                    player.sendMessage(titlesList.build());
+
+                    return CommandResult.success();
                 }
-
-                player.sendMessage(titlesList.build());
-
-                return CommandResult.success();
             }
         }
 

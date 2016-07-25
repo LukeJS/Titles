@@ -2,10 +2,8 @@ package me.nentify.titles.titles;
 
 import me.nentify.titles.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
-import org.spongepowered.api.text.LiteralText;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.action.ClickAction;
-import org.spongepowered.api.text.action.TextAction;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
@@ -62,7 +60,7 @@ public abstract class Title {
     public Text.Builder getHoverTextBuilder() {
         return Text.builder(getName() + " ")
                 .append(Text.of(getTier().getColor(), toRomanNumerals(tier.getTierRank()) + "\n"))
-                .append(Text.of(getTier().getColor(), getTier().getName()));
+                .append(getTier().getText());
     }
 
     public Text getPrefixText(boolean edit) {
@@ -71,10 +69,10 @@ public abstract class Title {
 
         if (edit) {
             Text hoverEditText = Text.builder("\n")
-                    .append(Text.of(TextColors.GRAY, TextStyles.ITALIC, "Click to edit")).build();
+                    .append(Text.of(TextColors.GRAY, TextStyles.ITALIC, "Click to change your title")).build();
 
             hoverText = hoverText.append(hoverEditText);
-            prefixTest = prefixTest.onClick(TextActions.runCommand("/broadcast edit"));
+            prefixTest = prefixTest.onClick(TextActions.runCommand("/titles"));
         }
 
         return prefixTest.onHover(TextActions.showText(hoverText.build())).build();
@@ -84,14 +82,32 @@ public abstract class Title {
         return getTitleTextBuilder()
                 .onHover(TextActions.showText(
                         getHoverTextBuilder()
-                                .append(Text.of(TextColors.GREEN, TextStyles.ITALIC, "Choose"))
+                                .append(Text.of("\n"))
+                                .append(Text.of(TextColors.GREEN, TextStyles.ITALIC, "Click to choose this title"))
                                 .build()))
-                .onClick(TextActions.runCommand("/broadcast choose " + getName()))
+                .onClick(TextActions.runCommand("/titles " + getType()))
                 .build();
     }
 
-    public static void test() {
+    public void sendMessage(Player player) {
+        if (getTier() == Tier.NOOB)
+            player.sendMessage(getUnlockMessage());
+        else
+            player.sendMessage(getRankUpMessage());
+    }
 
+    public Text getUnlockMessage() {
+        return Text.builder("Congratulations! You have unlcoked a new title: ").color(TextColors.GOLD)
+                .append(getChooseText())
+                .build();
+    }
+
+    public Text getRankUpMessage() {
+        return Text.builder("Congratulations! Your title ").color(TextColors.GOLD)
+                .append(getChooseText())
+                .append(Text.of(TextColors.GOLD, " has ranked up to "))
+                .append(getTier().getText())
+                .build();
     }
 
     public static String toRomanNumerals(int number) {
@@ -123,13 +139,11 @@ public abstract class Title {
         }
     }
 
-    public boolean check(TitlesPlayer titlesPlayer) {
+    public void check(TitlesPlayer titlesPlayer, Player player) {
         if (!isMaxTier() && canRankUp(titlesPlayer)) {
             incrementTier();
-            return true;
+            sendMessage(player);
         }
-
-        return false;
     }
 
     abstract boolean canRankUp(TitlesPlayer titlesPlayer);
@@ -159,6 +173,10 @@ public abstract class Title {
             return color;
         }
 
+        public Text getText() {
+            return Text.of(getColor(), getName());
+        }
+
         public int getTierRank() {
             return ordinal();
         }
@@ -173,6 +191,7 @@ public abstract class Title {
 
     public enum Type {
         BLOCK_BREAKER,
-        ONLINE_TIME;
+        ONLINE_TIME,
+        CHATTY;
     }
 }
