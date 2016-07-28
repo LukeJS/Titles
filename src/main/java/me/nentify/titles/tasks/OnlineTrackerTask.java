@@ -1,6 +1,6 @@
 package me.nentify.titles.tasks;
 
-import me.nentify.titles.TitlesPlayer;
+import me.nentify.titles.player.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
 import me.nentify.titles.titles.Title;
 import org.spongepowered.api.Sponge;

@@ -1,7 +1,7 @@
 package me.nentify.titles.commands;
 
 import me.nentify.titles.Titles;
-import me.nentify.titles.TitlesPlayer;
+import me.nentify.titles.player.TitlesPlayer;
 import me.nentify.titles.titles.Title;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;

@@ -1,6 +1,6 @@
 package me.nentify.titles.titles;
 
-import me.nentify.titles.TitlesPlayer;
+import me.nentify.titles.player.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
 
 import java.util.Arrays;
