@@ -1,17 +1,35 @@
 package me.nentify.titles.titles;
 
+import com.flowpowered.math.vector.Vector3d;
 import me.nentify.titles.Titles;
-import me.nentify.titles.TitlesPlayer;
+import me.nentify.titles.player.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.FireworkEffectData;
+import org.spongepowered.api.effect.particle.ParticleEffect;
+import org.spongepowered.api.effect.particle.ParticleTypes;
+import org.spongepowered.api.effect.sound.SoundTypes;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.projectile.Firework;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
+import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
+import org.spongepowered.api.item.FireworkEffect;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
+import org.spongepowered.api.util.Color;
+import org.spongepowered.api.world.extent.Extent;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public abstract class Title {
 
@@ -41,12 +59,16 @@ public abstract class Title {
         return tier;
     }
 
-    public void incrementTier() {
+    public void promote() {
         Optional<Tier> nextTier = tier.getNextTier();
 
         if (nextTier.isPresent()) {
             tier = nextTier.get();
         }
+    }
+
+    public void setTier(Tier tier) {
+        this.tier = tier;
     }
 
     public boolean isMaxTier() {
@@ -90,20 +112,20 @@ public abstract class Title {
                 .build();
     }
 
-    public void sendMessage(Player player) {
+    private void sendMessage(Player player) {
         if (getTier() == Tier.NOOB)
             Titles.sendDelayedMessage(player, getUnlockMessage());
         else
             Titles.sendDelayedMessage(player, getRankUpMessage());
     }
 
-    public Text getUnlockMessage() {
+    private Text getUnlockMessage() {
         return Text.builder("Congratulations! You have unlcoked a new title: ").color(TextColors.GOLD)
                 .append(getChooseText())
                 .build();
     }
 
-    public Text getRankUpMessage() {
+    private Text getRankUpMessage() {
         return Text.builder("Congratulations! ").color(TextColors.GOLD)
                 .append(getChooseText())
                 .append(Text.of(TextColors.GOLD, " has ranked up to "))
@@ -140,10 +162,86 @@ public abstract class Title {
         }
     }
 
+    private FireworkEffect getFireworkEffect() {
+        return FireworkEffect.builder()
+                .colors(getTier().getColor().getColor(), Color.WHITE)
+                .trail(true)
+                .build();
+    }
+
+    private void spawnFireworks(Player player) {
+        Task.Builder taskBuilder = Sponge.getScheduler().createTaskBuilder();
+
+        taskBuilder
+                .execute(new Consumer<Task>() {
+                    private int count = getTier().getTierRank() - 1;
+
+                    @Override
+                    public void accept(Task task) {
+                        count--;
+
+                        player.playSound(SoundTypes.ENTITY_FIREWORK_LAUNCH, player.getLocation().getPosition(), 1);
+
+                        if (count <= 0)
+                            task.cancel();
+                    }
+                })
+                .intervalTicks(5)
+                .delayTicks(2)
+                .submit(Titles.instance);
+
+        taskBuilder
+                .execute(new Consumer<Task>() {
+                    private int count = getTier().getTierRank();
+
+                    @Override
+                    public void accept(Task task) {
+                        count--;
+
+                        Extent extent = player.getLocation().getExtent();
+                        Optional<Entity> entityOptional = extent.createEntity(EntityTypes.FIREWORK, player.getLocation().getPosition());
+
+                        if (entityOptional.isPresent()) {
+                            Entity firework = entityOptional.get();
+
+                            FireworkEffectData fireworkEffectData = firework.getOrCreate(FireworkEffectData.class).get();
+                            fireworkEffectData.addElement(getFireworkEffect());
+
+                            firework.offer(fireworkEffectData);
+                            firework.offer(Keys.FIREWORK_FLIGHT_MODIFIER, 2);
+
+                            extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
+                        }
+
+                        if (count <= 0)
+                            task.cancel();
+                    }
+                })
+                .intervalTicks(5)
+                .delayTicks(1)
+                .submit(Titles.instance);
+
+        // TODO: Put this into another method
+        Extent extent = player.getLocation().getExtent();
+        Optional<Entity> entityOptional = extent.createEntity(EntityTypes.FIREWORK, player.getLocation().getPosition());
+
+        if (entityOptional.isPresent()) {
+            Entity firework = entityOptional.get();
+
+            FireworkEffectData fireworkEffectData = firework.getOrCreate(FireworkEffectData.class).get();
+            fireworkEffectData.addElement(getFireworkEffect());
+
+            firework.offer(fireworkEffectData);
+
+            extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
+        }
+    }
+
     public void check(TitlesPlayer titlesPlayer, Player player) {
         if (!isMaxTier() && canRankUp(titlesPlayer)) {
-            incrementTier();
+            promote();
             sendMessage(player);
+            spawnFireworks(player);
         }
     }
 
