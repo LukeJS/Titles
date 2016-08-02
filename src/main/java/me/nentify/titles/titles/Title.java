@@ -1,19 +1,15 @@
 package me.nentify.titles.titles;
 
-import com.flowpowered.math.vector.Vector3d;
 import me.nentify.titles.Titles;
 import me.nentify.titles.player.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.mutable.FireworkEffectData;
-import org.spongepowered.api.effect.particle.ParticleEffect;
-import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.projectile.Firework;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
@@ -199,19 +195,17 @@ public abstract class Title {
                         count--;
 
                         Extent extent = player.getLocation().getExtent();
-                        Optional<Entity> entityOptional = extent.createEntity(EntityTypes.FIREWORK, player.getLocation().getPosition());
+                        Entity firework = extent.createEntity(EntityTypes.FIREWORK, player.getLocation().getPosition());
 
-                        if (entityOptional.isPresent()) {
-                            Entity firework = entityOptional.get();
 
-                            FireworkEffectData fireworkEffectData = firework.getOrCreate(FireworkEffectData.class).get();
-                            fireworkEffectData.addElement(getFireworkEffect());
+                        FireworkEffectData fireworkEffectData = firework.getOrCreate(FireworkEffectData.class).get();
+                        fireworkEffectData.addElement(getFireworkEffect());
 
-                            firework.offer(fireworkEffectData);
-                            firework.offer(Keys.FIREWORK_FLIGHT_MODIFIER, 2);
+                        firework.offer(fireworkEffectData);
+                        firework.offer(Keys.FIREWORK_FLIGHT_MODIFIER, 2);
 
-                            extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
-                        }
+                        extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
+
 
                         if (count <= 0)
                             task.cancel();
@@ -223,18 +217,15 @@ public abstract class Title {
 
         // TODO: Put this into another method
         Extent extent = player.getLocation().getExtent();
-        Optional<Entity> entityOptional = extent.createEntity(EntityTypes.FIREWORK, player.getLocation().getPosition());
+        Entity firework = extent.createEntity(EntityTypes.FIREWORK, player.getLocation().getPosition());
 
-        if (entityOptional.isPresent()) {
-            Entity firework = entityOptional.get();
+        FireworkEffectData fireworkEffectData = firework.getOrCreate(FireworkEffectData.class).get();
+        fireworkEffectData.addElement(getFireworkEffect());
 
-            FireworkEffectData fireworkEffectData = firework.getOrCreate(FireworkEffectData.class).get();
-            fireworkEffectData.addElement(getFireworkEffect());
+        firework.offer(fireworkEffectData);
 
-            firework.offer(fireworkEffectData);
-
-            extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
-        }
+        extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
+        
     }
 
     public void check(TitlesPlayer titlesPlayer, Player player) {
