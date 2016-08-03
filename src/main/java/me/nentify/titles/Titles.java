@@ -3,6 +3,7 @@ package me.nentify.titles;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.inject.Inject;
 import me.nentify.titles.commands.TitlesCommand;
+import me.nentify.titles.config.Config;
 import me.nentify.titles.events.BlockEventHandler;
 import me.nentify.titles.events.PlayerEventHandler;
 import me.nentify.titles.player.TitlesPlayer;
@@ -15,6 +16,7 @@ import org.spongepowered.api.GameRegistry;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.mutable.FireworkEffectData;
 import org.spongepowered.api.data.manipulator.mutable.FireworkRocketData;
@@ -43,6 +45,8 @@ import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.Extent;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,6 +66,11 @@ public class Titles {
     @Inject
     public Logger logger;
 
+    @Inject
+    @DefaultConfig(sharedRoot = true)
+    private Path configPath;
+    private Config config;
+
     private static final Map<UUID, TitlesPlayer> titlesPlayers = new WeakHashMap<>();
 
     public MySQLStorage storage;
@@ -71,6 +80,12 @@ public class Titles {
         logger.info("Starting " + PLUGIN_NAME + " v" + PLUGIN_VERSION);
 
         instance = this;
+
+        try {
+            config = new Config(configPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         CommandSpec titlesCommandSpec = CommandSpec.builder()
                 .description(Text.of("Choose your title"))
@@ -87,9 +102,8 @@ public class Titles {
 
         Sponge.getGame().getEventManager().registerListeners(this, new BlockEventHandler());
         Sponge.getGame().getEventManager().registerListeners(this, new PlayerEventHandler());
-
-        // Working on configs next!! This won't compile yet.
-        storage = new MySQLStorage(hostname, port, database, username, password);
+        
+        storage = new MySQLStorage(config.hostname, config.port, config.database, config.username, config.password);
     }
 
     // this event is async
