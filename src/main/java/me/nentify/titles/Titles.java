@@ -1,6 +1,5 @@
 package me.nentify.titles;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.google.inject.Inject;
 import me.nentify.titles.commands.TitlesCommand;
 import me.nentify.titles.config.Config;
@@ -11,39 +10,18 @@ import me.nentify.titles.player.TitlesPlayerFactory;
 import me.nentify.titles.storage.MySQLStorage;
 import me.nentify.titles.titles.Title;
 import org.slf4j.Logger;
-import org.spongepowered.api.Game;
-import org.spongepowered.api.GameRegistry;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.config.DefaultConfig;
-import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.data.manipulator.mutable.FireworkEffectData;
-import org.spongepowered.api.data.manipulator.mutable.FireworkRocketData;
-import org.spongepowered.api.effect.particle.ParticleEffect;
-import org.spongepowered.api.effect.particle.ParticleTypes;
-import org.spongepowered.api.effect.sound.SoundTypes;
-import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.projectile.Firework;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
-import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
-import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.item.FireworkEffect;
-import org.spongepowered.api.item.FireworkShapes;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.util.Color;
-import org.spongepowered.api.world.World;
-import org.spongepowered.api.world.extent.Extent;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -102,7 +80,7 @@ public class Titles {
 
         Sponge.getGame().getEventManager().registerListeners(this, new BlockEventHandler());
         Sponge.getGame().getEventManager().registerListeners(this, new PlayerEventHandler());
-        
+
         storage = new MySQLStorage(config.hostname, config.port, config.database, config.username, config.password);
     }
 

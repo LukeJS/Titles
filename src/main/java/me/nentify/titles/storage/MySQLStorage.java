@@ -1,6 +1,5 @@
 package me.nentify.titles.storage;
 
-import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import me.nentify.titles.Titles;
