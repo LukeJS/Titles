@@ -6,12 +6,15 @@ import me.nentify.titles.titles.Title;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class TitlesPlayerFactory {
 
     public static TitlesPlayer createTitlesPlayer(UUID uuid) {
-        TitlesPlayer titlesPlayer = new TitlesPlayer(uuid);
+        Optional<Title.Type> currentTitleType = Titles.instance.storage.getCurrentTitleType(uuid);
+
+        TitlesPlayer titlesPlayer = new TitlesPlayer(uuid, currentTitleType.isPresent() ? currentTitleType.get() : Title.Type.ONLINE_TIME);
 
         Map<Title.Type, Title.Tier> titleTiers = Titles.instance.storage.getTitlesForPlayer(uuid);
 

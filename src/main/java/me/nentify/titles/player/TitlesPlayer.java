@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -29,7 +31,7 @@ public class TitlesPlayer {
 
     private Task task;
 
-    public TitlesPlayer(UUID uuid) {
+    public TitlesPlayer(UUID uuid, Title.Type currentTitleType) {
         this.uuid = uuid;
 
         addTitle(new BlockBreakerTitle(Title.Tier.UNRANKED));
@@ -49,8 +51,7 @@ public class TitlesPlayer {
                 .name("Online Time Tracker: " + uuid)
                 .submit(Titles.instance);
 
-        // testing
-        currentTitleType = Title.Type.ONLINE_TIME; // default
+        this.currentTitleType = currentTitleType;
     }
 
     public UUID getUUID() {
@@ -107,13 +108,6 @@ public class TitlesPlayer {
             title.get().check(this, player);
     }
 
-    // Want to return something for this
-//    public void checkTitles() {
-//        for (Title title : titles.values()) {
-//            title.check(this);
-//        }
-//    }
-
     public boolean hasTitle(Title.Type type) {
         return titles.values().stream().filter(x -> x.getTier() != Title.Tier.UNRANKED).map(Title::getType).collect(Collectors.toSet()).contains(type);
     }
@@ -124,6 +118,12 @@ public class TitlesPlayer {
 
     public void setCurrentTitleType(Title.Type type) {
         currentTitleType = type;
+
+        // Update MySQL data asynchronously
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            Titles.instance.storage.updateCurrentTitle(getUUID(), type);
+        });
     }
 
     public Title getCurrentTitle() {

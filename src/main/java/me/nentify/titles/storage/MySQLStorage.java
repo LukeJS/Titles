@@ -15,6 +15,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * I'VE CREATED A MONSTER!!!!
+ */
 public class MySQLStorage {
 
     private DataSource db;
@@ -107,14 +110,37 @@ public class MySQLStorage {
             Connection connection = getConnection();
 
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT " +
-                    "INTO titles_players(uuid) " +
-                    "values(?)");
+                    "INTO titles_players (uuid) " +
+                    "values (?)", Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, Utils.uuidToString(uuid));
+            preparedStatement.executeUpdate();
 
-            String uuidString = uuid.toString().replaceAll("-", "");
+            ResultSet resultSet = preparedStatement.getGeneratedKeys();
 
-            preparedStatement.setString(1, uuidString);
+            if (resultSet.next()) {
+                int playerId = resultSet.getInt(1);
 
-            preparedStatement.execute();
+                preparedStatement = connection.prepareStatement("INSERT " +
+                        "INTO titles_titles (player_id, type, tier)" +
+                        "VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+                preparedStatement.setInt(1, playerId);
+                preparedStatement.setString(2, Title.Type.ONLINE_TIME.toString());
+                preparedStatement.setString(3, Title.Tier.NOOB.toString());
+                preparedStatement.executeUpdate();
+
+                resultSet = preparedStatement.getGeneratedKeys();
+
+                if (resultSet.next()) {
+                    int titleId = resultSet.getInt(1);
+
+                    preparedStatement = connection.prepareStatement("INSERT " +
+                            "INTO titles_current_title (player_id, title_id)" +
+                            "VALUES (?, ?)");
+                    preparedStatement.setInt(1, playerId);
+                    preparedStatement.setInt(2, titleId);
+                    preparedStatement.execute();
+                }
+            }
 
             connection.close();
         } catch (SQLException e) {
@@ -151,6 +177,37 @@ public class MySQLStorage {
         return Optional.empty();
     }
 
+    public Optional<Integer> getTitleId(int playerId, Title.Type type) {
+        try {
+            Connection connection = getConnection();
+
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT id " +
+                    "FROM titles_titles " +
+                    "WHERE player_id = ? " +
+                    "AND type = ?");
+
+            preparedStatement.setInt(1, playerId);
+            preparedStatement.setString(2, type.toString());
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (!resultSet.first()) {
+                connection.close();
+                return Optional.empty();
+            }
+
+            int id = resultSet.getInt("id");
+
+            connection.close();
+
+            return Optional.of(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return Optional.empty();
+    }
+
     public void insertTitle(UUID uuid, Title.Type type) {
         try {
             Connection connection = getConnection();
@@ -161,8 +218,8 @@ public class MySQLStorage {
                 int playerId = playerIdOptional.get();
 
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT " +
-                        "INTO titles_titles(player_id, type, tier) " +
-                        "values(?, ?, ?)");
+                        "INTO titles_titles (player_id, type, tier) " +
+                        "values (?, ?, ?)");
 
                 preparedStatement.setInt(1, playerId);
                 preparedStatement.setString(2, type.toString());
@@ -243,5 +300,64 @@ public class MySQLStorage {
         }
 
         return null;
+    }
+
+    public void updateCurrentTitle(UUID uuid, Title.Type type) {
+        try {
+            Connection connection = getConnection();
+
+            Optional<Integer> playerIdOptional = getPlayerId(uuid);
+
+            if (playerIdOptional.isPresent()) {
+                int playerId = playerIdOptional.get();
+
+                Optional<Integer> titleIdOptional = getTitleId(playerId, type);
+
+                if (titleIdOptional.isPresent()) {
+                    int titleId = titleIdOptional.get();
+
+                    PreparedStatement preparedStatement = connection.prepareStatement("UPDATE titles_current_title " +
+                            "SET title_id = ?" +
+                            "WHERE player_id = ?");
+                    preparedStatement.setInt(1, titleId);
+                    preparedStatement.setInt(2, playerId);
+                }
+            }
+
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Optional<Title.Type> getCurrentTitleType(UUID uuid) {
+        try {
+            Connection connection = getConnection();
+
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT p.*, c.*, t.* " +
+                    "FROM titles_players AS p, " +
+                    "INNER JOIN titles_current_title AS c ON p.id = c.player_id " +
+                    "INNER JOIN titles_titles AS t ON t.id = c.title_id " +
+                    "WHERE p.uuid = ?" +
+                    "LIMIT 1");
+            preparedStatement.setString(1, Utils.uuidToString(uuid));
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (!resultSet.first()) {
+                connection.close();
+                return Optional.of(Title.Type.ONLINE_TIME);
+            }
+
+            Title.Type type = Title.Type.valueOf(resultSet.getString("type"));
+
+            connection.close();
+
+            return Optional.of(type);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return Optional.empty();
     }
 }
