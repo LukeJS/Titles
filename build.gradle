@@ -8,4 +8,5 @@ description = 'Gain and wear titles'
 
 dependencies {
     compile 'org.spongepowered:spongeapi:5.0.0-SNAPSHOT'
+    compile 'com.zaxxer:HikariCP:2.4.3'
 }
