@@ -35,7 +35,7 @@ public class Titles {
 
     public static final String PLUGIN_ID = "titles";
     public static final String PLUGIN_NAME = "Titles";
-    public static final String PLUGIN_VERSION = "0.3.0";
+    public static final String PLUGIN_VERSION = "0.4.0";
 
     public static Titles instance;
 
