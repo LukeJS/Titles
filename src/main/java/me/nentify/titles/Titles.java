@@ -93,7 +93,7 @@ public class Titles {
         }
 
         if (!titlesPlayers.containsKey(uuid)) {
-            titlesPlayers.put(uuid, TitlesPlayerFactory.createTitlesPlayer(uuid, player.getName()));
+            titlesPlayers.put(uuid, TitlesPlayerFactory.createTitlesPlayer(uuid));
         }
     }
 

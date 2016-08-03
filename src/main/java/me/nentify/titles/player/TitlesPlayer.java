@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 public class TitlesPlayer {
 
     private UUID uuid;
-    private String name;
 
     private Map<Title.Type, Title> titles = new HashMap<>();
     private Map<Stat, Integer> stats = new HashMap<>();
@@ -30,11 +29,9 @@ public class TitlesPlayer {
 
     private Task task;
 
-    public TitlesPlayer(UUID uuid, String name) {
+    public TitlesPlayer(UUID uuid) {
         this.uuid = uuid;
-        this.name = name;
 
-        // Will need to get rank + stat from DB
         addTitle(new BlockBreakerTitle(Title.Tier.UNRANKED));
         addTitle(new OnlineTimeTitle(Title.Tier.NOOB));
         addTitle(new ChattyTitle(Title.Tier.UNRANKED));
@@ -49,7 +46,7 @@ public class TitlesPlayer {
         task = Sponge.getScheduler().createTaskBuilder()
                 .execute(onlineTrackerTask)
                 .interval(1, TimeUnit.MINUTES)
-                .name("Online Time Tracker: " + name)
+                .name("Online Time Tracker: " + uuid)
                 .submit(Titles.instance);
 
         // testing
