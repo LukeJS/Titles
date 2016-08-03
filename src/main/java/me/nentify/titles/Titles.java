@@ -30,8 +30,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
-import static sun.audio.AudioPlayer.player;
-
 @Plugin(id = Titles.PLUGIN_ID, name = Titles.PLUGIN_NAME, version = Titles.PLUGIN_VERSION)
 public class Titles {
 
