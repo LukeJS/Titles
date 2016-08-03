@@ -10,8 +10,8 @@ import java.util.UUID;
 
 public class TitlesPlayerFactory {
 
-    public static TitlesPlayer createTitlesPlayer(UUID uuid, String name) {
-        TitlesPlayer titlesPlayer = new TitlesPlayer(uuid, name);
+    public static TitlesPlayer createTitlesPlayer(UUID uuid) {
+        TitlesPlayer titlesPlayer = new TitlesPlayer(uuid);
 
         Map<Title.Type, Title.Tier> titleTiers = Titles.instance.storage.getTitlesForPlayer(uuid);
 
