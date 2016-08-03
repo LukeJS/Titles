@@ -264,14 +264,10 @@ public class MySQLStorage {
         try {
             Connection connection = getConnection();
 
-            Titles.instance.logger.info("hello");
-
             Optional<Integer> playerIdOptional = getPlayerId(uuid);
 
             if (playerIdOptional.isPresent()) {
                 int playerId = playerIdOptional.get();
-
-                Titles.instance.logger.info(playerId + " ");
 
                 PreparedStatement preparedStatement = connection.prepareStatement("SELECT * " +
                         "FROM titles_titles " +
@@ -284,10 +280,8 @@ public class MySQLStorage {
                 Map<Title.Type, Title.Tier> titles = new HashMap<>();
 
                 while (resultSet.next()) {
-                    Titles.instance.logger.info(resultSet.getString("type") + " " + resultSet.getString("tier"));
                     Title.Type type = Title.Type.valueOf(resultSet.getString("type"));
                     Title.Tier tier = Title.Tier.valueOf(resultSet.getString("tier"));
-                    Titles.instance.logger.info(type + " " + tier);
                     titles.put(type, tier);
                 }
 
@@ -317,10 +311,11 @@ public class MySQLStorage {
                     int titleId = titleIdOptional.get();
 
                     PreparedStatement preparedStatement = connection.prepareStatement("UPDATE titles_current_title " +
-                            "SET title_id = ?" +
+                            "SET title_id = ? " +
                             "WHERE player_id = ?");
                     preparedStatement.setInt(1, titleId);
                     preparedStatement.setInt(2, playerId);
+                    preparedStatement.execute();
                 }
             }
 
@@ -335,10 +330,10 @@ public class MySQLStorage {
             Connection connection = getConnection();
 
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT p.*, c.*, t.* " +
-                    "FROM titles_players AS p, " +
+                    "FROM titles_players AS p " +
                     "INNER JOIN titles_current_title AS c ON p.id = c.player_id " +
                     "INNER JOIN titles_titles AS t ON t.id = c.title_id " +
-                    "WHERE p.uuid = ?" +
+                    "WHERE p.uuid = ? " +
                     "LIMIT 1");
             preparedStatement.setString(1, Utils.uuidToString(uuid));
 
