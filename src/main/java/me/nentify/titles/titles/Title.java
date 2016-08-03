@@ -25,6 +25,9 @@ import org.spongepowered.api.world.extent.Extent;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public abstract class Title {
@@ -55,11 +58,21 @@ public abstract class Title {
         return tier;
     }
 
-    public void promote() {
+    public void promote(UUID uuid) {
         Optional<Tier> nextTier = tier.getNextTier();
 
         if (nextTier.isPresent()) {
             tier = nextTier.get();
+
+            // Update MySQL data asynchronously
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                if (tier == Tier.NOOB) {
+                    Titles.instance.storage.insertTitle(uuid, getType());
+                } else {
+                    Titles.instance.storage.updateTitle(uuid, getType(), tier);
+                }
+            });
         }
     }
 
@@ -225,12 +238,11 @@ public abstract class Title {
         firework.offer(fireworkEffectData);
 
         extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
-        
     }
 
     public void check(TitlesPlayer titlesPlayer, Player player) {
         if (!isMaxTier() && canRankUp(titlesPlayer)) {
-            promote();
+            promote(player.getUniqueId());
             sendMessage(player);
             spawnFireworks(player);
         }

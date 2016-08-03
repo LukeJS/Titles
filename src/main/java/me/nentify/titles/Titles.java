@@ -7,6 +7,7 @@ import me.nentify.titles.events.BlockEventHandler;
 import me.nentify.titles.events.PlayerEventHandler;
 import me.nentify.titles.player.TitlesPlayer;
 import me.nentify.titles.player.TitlesPlayerFactory;
+import me.nentify.titles.storage.MySQLStorage;
 import me.nentify.titles.titles.Title;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
@@ -35,6 +36,7 @@ import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.FireworkEffect;
 import org.spongepowered.api.item.FireworkShapes;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Color;
@@ -46,6 +48,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
+import static sun.audio.AudioPlayer.player;
+
 @Plugin(id = Titles.PLUGIN_ID, name = Titles.PLUGIN_NAME, version = Titles.PLUGIN_VERSION)
 public class Titles {
 
@@ -56,9 +60,11 @@ public class Titles {
     public static Titles instance;
 
     @Inject
-    private Logger logger;
+    public Logger logger;
 
     private static final Map<UUID, TitlesPlayer> titlesPlayers = new WeakHashMap<>();
+
+    public MySQLStorage storage;
 
     @Listener
     public void onPreIinit(GamePreInitializationEvent event) {
@@ -81,16 +87,30 @@ public class Titles {
 
         Sponge.getGame().getEventManager().registerListeners(this, new BlockEventHandler());
         Sponge.getGame().getEventManager().registerListeners(this, new PlayerEventHandler());
+
+        // Working on configs next!! This won't compile yet.
+        storage = new MySQLStorage(hostname, port, database, username, password);
     }
 
+    // this event is async
     @Listener
-    public void onPlayerLogin(ClientConnectionEvent.Join event) {
-        Player player = event.getTargetEntity();
-        UUID uuid = player.getUniqueId();
+    public void onPlayerAuth(ClientConnectionEvent.Auth event) {
+        GameProfile profile = event.getProfile();
+        UUID uuid = profile.getUniqueId();
+
+        if (!storage.userExists(uuid)) {
+            storage.insertUser(uuid);
+        }
 
         if (!titlesPlayers.containsKey(uuid)) {
             titlesPlayers.put(uuid, TitlesPlayerFactory.createTitlesPlayer(uuid, player.getName()));
         }
+    }
+
+    // this one isnt async
+    @Listener
+    public void onPlayerLogin(ClientConnectionEvent.Join event) {
+
     }
 
     @Listener
