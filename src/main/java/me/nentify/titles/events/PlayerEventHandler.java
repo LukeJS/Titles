@@ -17,6 +17,7 @@ import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 public class PlayerEventHandler {
@@ -30,9 +31,8 @@ public class PlayerEventHandler {
         // Chat stat
         if (titlesPlayerOptional.isPresent()) {
             TitlesPlayer titlesPlayer = titlesPlayerOptional.get();
-
             titlesPlayer.incrementStat(Stat.CHAT_MESSAGES);
-            titlesPlayer.checkTitle(Title.Type.CHATTY, player);
+            titlesPlayer.checkTitle(Title.Type.CHATTY);
         }
 
         // Prefix chat with title
@@ -46,20 +46,23 @@ public class PlayerEventHandler {
         @Override
         public Optional<Text> transformMessage(@Nullable Object sender, MessageReceiver recipient, Text original, ChatType type) {
             Player senderPlayer = (Player) sender;
-            Player receiverPlayer = (Player) recipient;
 
-            Optional<TitlesPlayer> titlesPlayer = Titles.getTitlesPlayer(senderPlayer.getUniqueId());
+            if (recipient instanceof Player) {
+                Player receiverPlayer = (Player) recipient;
 
-            if (titlesPlayer.isPresent()) {
-                return Optional.of(
-                        getTitledMessage(
-                                titlesPlayer.get(),
-                                original,
-                                senderPlayer.getUniqueId().equals(
-                                        receiverPlayer.getUniqueId()
-                                )
-                        )
-                );
+                Optional<TitlesPlayer> titlesPlayer = Titles.getTitlesPlayer(senderPlayer.getUniqueId());
+
+                if (titlesPlayer.isPresent()) {
+                    return Optional.of(
+                            getTitledMessage(
+                                    titlesPlayer.get(),
+                                    original,
+                                    senderPlayer.getUniqueId().equals(
+                                            receiverPlayer.getUniqueId()
+                                    )
+                            )
+                    );
+                }
             }
 
             return Optional.of(original);
@@ -67,7 +70,7 @@ public class PlayerEventHandler {
 
         @Override
         public Collection<MessageReceiver> getMembers() {
-            return null;
+            return Collections.emptyList();
         }
 
         private Text getTitledMessage(TitlesPlayer titlesPlayer, Text message, boolean edit) {

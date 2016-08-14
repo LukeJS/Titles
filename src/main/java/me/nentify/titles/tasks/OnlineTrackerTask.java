@@ -20,12 +20,11 @@ public class OnlineTrackerTask implements Consumer<Task> {
 
     @Override
     public void accept(Task task) {
-        titlesPlayer.incrementStat(Stat.ONLINE_TIME);
-
         Optional<Player> player = Sponge.getServer().getPlayer(titlesPlayer.getUUID());
 
         if (player.isPresent()) {
-            titlesPlayer.checkTitle(Title.Type.ONLINE_TIME, player.get());
+            titlesPlayer.incrementStat(Stat.ONLINE_TIME);
+            titlesPlayer.checkTitle(Title.Type.ONLINE_TIME);
         } else {
             task.cancel();
         }

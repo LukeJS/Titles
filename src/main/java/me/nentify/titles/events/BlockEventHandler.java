@@ -20,7 +20,7 @@ public class BlockEventHandler {
         if (titlesPlayerOptional.isPresent()) {
             TitlesPlayer titlesPlayer = titlesPlayerOptional.get();
             titlesPlayer.incrementStat(Stat.BLOCKS_BROKEN);
-            titlesPlayer.checkTitle(Title.Type.BLOCK_BREAKER, player);
+            titlesPlayer.checkTitle(Title.Type.BLOCK_BREAKER);
         }
     }
 }

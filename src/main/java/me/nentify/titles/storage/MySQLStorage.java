@@ -47,14 +47,14 @@ public class MySQLStorage {
             statement.execute("CREATE TABLE IF NOT EXISTS titles_players (" +
                     "uuid CHAR(32) NOT NULL, " +
                     "current_title VARCHAR(100) NOT NULL, " +
-                    "PRIMARY KEY (id)" +
+                    "PRIMARY KEY (uuid)" +
                     ")");
 
             statement.execute("CREATE TABLE IF NOT EXISTS titles_stats (" +
-                    "player_uuid INT(15) UNSIGNED NOT NULL, " +
+                    "player_uuid CHAR(32) NOT NULL, " +
                     "stat VARCHAR(100), " +
                     "count INT(15), " +
-                    "FOREIGN KEY (player_uuid) REFERENCES titles_players (player_uuid) ON DELETE CASCADE" +
+                    "PRIMARY KEY (player_uuid, stat)" +
                     ")");
 
             connection.close();
@@ -108,7 +108,8 @@ public class MySQLStorage {
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT  " +
                     "INTO titles_stats (player_uuid, stat, count) " +
                     "VALUES (?, ?, ?) " +
-                    "ON DUPLICATE KEY UPDATE");
+                    "ON DUPLICATE KEY UPDATE " +
+                    "count = VALUES(count)");
             preparedStatement.setString(1, Utils.uuidToString(uuid));
             preparedStatement.setString(2, stat.toString());
             preparedStatement.setInt(3, count);
@@ -124,10 +125,9 @@ public class MySQLStorage {
         try {
             Connection connection = getConnection();
 
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT p.*, s.* " +
-                    "FROM titles_players AS p " +
-                    "INNER JOIN titles_stats AS s ON p.uuid = s.player_uuid " +
-                    "WHERE p.uuid = ? ");
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT stat, count " +
+                    "FROM titles_stats " +
+                    "WHERE player_uuid = ? ");
             preparedStatement.setString(1, Utils.uuidToString(uuid));
 
             ResultSet resultSet = preparedStatement.executeQuery();

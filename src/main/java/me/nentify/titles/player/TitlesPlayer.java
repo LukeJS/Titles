@@ -8,7 +8,6 @@ import me.nentify.titles.titles.ChattyTitle;
 import me.nentify.titles.titles.OnlineTimeTitle;
 import me.nentify.titles.titles.Title;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
 
 import java.util.HashMap;
@@ -68,7 +67,7 @@ public class TitlesPlayer {
     }
 
     public Optional<Integer> getStat(Stat stat) {
-        if (stats.containsKey(Stat.BLOCKS_BROKEN))
+        if (stats.containsKey(stat))
             return Optional.of(stats.get(stat));
 
         return Optional.empty();
@@ -79,17 +78,21 @@ public class TitlesPlayer {
     }
 
     public void incrementStat(Stat stat) {
-        int count = stats.containsKey(stat) ? stats.get(stat) + 1 : 1;
+        int count;
+
+        if (stats.containsKey(stat))
+            count = stats.get(stat) + 1;
+        else
+            count = 1;
+
         stats.put(stat, count);
 
         // Update MySQL data asynchronously
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            Titles.instance.storage.updateStat(getUUID(), stat, count);
-        });
+        executor.submit(() -> Titles.instance.storage.updateStat(getUUID(), stat, count));
     }
 
-    public void checkTitle(Title.Type type, Player player) {
+    public void checkTitle(Title.Type type) {
         Optional<Title> title = getTitle(type);
 
         if (title.isPresent())
