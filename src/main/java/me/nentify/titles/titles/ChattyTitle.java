@@ -17,8 +17,11 @@ public class ChattyTitle extends Title {
     boolean canRankUp(TitlesPlayer titlesPlayer) {
         Optional<Integer> chatMessages = titlesPlayer.getStat(Stat.CHAT_MESSAGES);
 
-        if (chatMessages.isPresent())
-            return chatMessages.get() > getTier().getTierRank() * 2;
+        if (chatMessages.isPresent()) {
+            int chatMessagesForRankup = (int) (5 * Math.pow(4, getTier().getTierRank()));
+
+            return chatMessages.get() >= chatMessagesForRankup;
+        }
 
         return false;
     }

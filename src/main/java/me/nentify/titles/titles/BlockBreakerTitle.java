@@ -18,7 +18,7 @@ public class BlockBreakerTitle extends Title {
         Optional<Integer> blocksBroken = titlesPlayer.getStat(Stat.BLOCKS_BROKEN);
 
         if (blocksBroken.isPresent()) {
-            int blocksForRankup = (int) Math.pow(5, getTier().getTierRank()); // 5, 25, 125, 625 : Noob, Novice, Experienced, Master
+            int blocksForRankup = (int) (50 * Math.pow(4, getTier().getTierRank()));
 
             return blocksBroken.get() >= blocksForRankup;
         }
