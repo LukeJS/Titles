@@ -22,6 +22,7 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.channel.MessageChannel;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -95,12 +96,6 @@ public class Titles {
         if (!titlesPlayers.containsKey(uuid)) {
             titlesPlayers.put(uuid, TitlesPlayerFactory.createTitlesPlayer(uuid));
         }
-    }
-
-    // this one isnt async
-    @Listener
-    public void onPlayerLogin(ClientConnectionEvent.Join event) {
-
     }
 
     @Listener

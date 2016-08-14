@@ -2,8 +2,8 @@ package me.nentify.titles.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import me.nentify.titles.Titles;
 import me.nentify.titles.Utils;
+import me.nentify.titles.stats.Stat;
 import me.nentify.titles.titles.Title;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.service.sql.SqlService;
@@ -15,9 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * I'VE CREATED A MONSTER!!!!
- */
 public class MySQLStorage {
 
     private DataSource db;
@@ -48,34 +45,16 @@ public class MySQLStorage {
             Statement statement = connection.createStatement();
 
             statement.execute("CREATE TABLE IF NOT EXISTS titles_players (" +
-                    "id INT(15) UNSIGNED NOT NULL AUTO_INCREMENT, " +
-                    "uuid CHAR(32), " +
+                    "uuid CHAR(32) NOT NULL, " +
+                    "current_title VARCHAR(100) NOT NULL, " +
                     "PRIMARY KEY (id)" +
                     ")");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS titles_titles (" +
-                    "id INT(15) UNSIGNED NOT NULL AUTO_INCREMENT, " +
-                    "player_id INT(15) UNSIGNED NOT NULL, " +
-                    "type VARCHAR(100), " +
-                    "tier VARCHAR(100), " +
-                    "PRIMARY KEY (id), " +
-                    "FOREIGN KEY (player_id) REFERENCES titles_players (id) ON DELETE CASCADE" +
-                    ")");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS titles_current_title (" +
-                    "player_id INT(15) UNSIGNED NOT NULL, " +
-                    "title_id INT(15) UNSIGNED NOT NULL, " +
-                    "FOREIGN KEY (player_id) REFERENCES titles_players (id) ON DELETE CASCADE, " +
-                    "FOREIGN KEY (title_id) REFERENCES titles_titles (id) ON DELETE CASCADE" +
-                    ")");
-
             statement.execute("CREATE TABLE IF NOT EXISTS titles_stats (" +
-                    "id INT(15) UNSIGNED NOT NULL AUTO_INCREMENT, " +
-                    "player_id INT(15) UNSIGNED NOT NULL, " +
+                    "player_uuid INT(15) UNSIGNED NOT NULL, " +
                     "stat VARCHAR(100), " +
                     "count INT(15), " +
-                    "PRIMARY KEY (id), " +
-                    "FOREIGN KEY (player_id) REFERENCES titles_players (id) ON DELETE CASCADE" +
+                    "FOREIGN KEY (player_uuid) REFERENCES titles_players (player_uuid) ON DELETE CASCADE" +
                     ")");
 
             connection.close();
@@ -110,37 +89,11 @@ public class MySQLStorage {
             Connection connection = getConnection();
 
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT " +
-                    "INTO titles_players (uuid) " +
-                    "values (?)", Statement.RETURN_GENERATED_KEYS);
+                    "INTO titles_players (uuid, current_title) " +
+                    "VALUES (?, ?)");
             preparedStatement.setString(1, Utils.uuidToString(uuid));
-            preparedStatement.executeUpdate();
-
-            ResultSet resultSet = preparedStatement.getGeneratedKeys();
-
-            if (resultSet.next()) {
-                int playerId = resultSet.getInt(1);
-
-                preparedStatement = connection.prepareStatement("INSERT " +
-                        "INTO titles_titles (player_id, type, tier)" +
-                        "VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-                preparedStatement.setInt(1, playerId);
-                preparedStatement.setString(2, Title.Type.ONLINE_TIME.toString());
-                preparedStatement.setString(3, Title.Tier.NOOB.toString());
-                preparedStatement.executeUpdate();
-
-                resultSet = preparedStatement.getGeneratedKeys();
-
-                if (resultSet.next()) {
-                    int titleId = resultSet.getInt(1);
-
-                    preparedStatement = connection.prepareStatement("INSERT " +
-                            "INTO titles_current_title (player_id, title_id)" +
-                            "VALUES (?, ?)");
-                    preparedStatement.setInt(1, playerId);
-                    preparedStatement.setInt(2, titleId);
-                    preparedStatement.execute();
-                }
-            }
+            preparedStatement.setString(2, Title.Type.ONLINE_TIME.toString());
+            preparedStatement.execute();
 
             connection.close();
         } catch (SQLException e) {
@@ -148,147 +101,48 @@ public class MySQLStorage {
         }
     }
 
-    public Optional<Integer> getPlayerId(UUID uuid) {
+    public void updateStat(UUID uuid, Stat stat, int count) {
         try {
             Connection connection = getConnection();
 
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * " +
-                    "FROM titles_players " +
-                    "WHERE uuid = ?");
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT  " +
+                    "INTO titles_stats (player_uuid, stat, count) " +
+                    "VALUES (?, ?, ?) " +
+                    "ON DUPLICATE KEY UPDATE");
+            preparedStatement.setString(1, Utils.uuidToString(uuid));
+            preparedStatement.setString(2, stat.toString());
+            preparedStatement.setInt(3, count);
+            preparedStatement.execute();
 
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Map<Stat, Integer> getStatsForPlayer(UUID uuid) {
+        try {
+            Connection connection = getConnection();
+
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT p.*, s.* " +
+                    "FROM titles_players AS p " +
+                    "INNER JOIN titles_stats AS s ON p.uuid = s.player_uuid " +
+                    "WHERE p.uuid = ? ");
             preparedStatement.setString(1, Utils.uuidToString(uuid));
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            if (!resultSet.first()) {
-                connection.close();
-                return Optional.empty();
-            }
+            Map<Stat, Integer> stats = new HashMap<>();
 
-            int id = resultSet.getInt("id");
-
-            connection.close();
-
-            return Optional.of(id);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return Optional.empty();
-    }
-
-    public Optional<Integer> getTitleId(int playerId, Title.Type type) {
-        try {
-            Connection connection = getConnection();
-
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT id " +
-                    "FROM titles_titles " +
-                    "WHERE player_id = ? " +
-                    "AND type = ?");
-
-            preparedStatement.setInt(1, playerId);
-            preparedStatement.setString(2, type.toString());
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            if (!resultSet.first()) {
-                connection.close();
-                return Optional.empty();
-            }
-
-            int id = resultSet.getInt("id");
-
-            connection.close();
-
-            return Optional.of(id);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return Optional.empty();
-    }
-
-    public void insertTitle(UUID uuid, Title.Type type) {
-        try {
-            Connection connection = getConnection();
-
-            Optional<Integer> playerIdOptional = getPlayerId(uuid);
-
-            if (playerIdOptional.isPresent()) {
-                int playerId = playerIdOptional.get();
-
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT " +
-                        "INTO titles_titles (player_id, type, tier) " +
-                        "values (?, ?, ?)");
-
-                preparedStatement.setInt(1, playerId);
-                preparedStatement.setString(2, type.toString());
-                preparedStatement.setString(3, Title.Tier.NOOB.toString());
-
-                preparedStatement.execute();
+            while (resultSet.next()) {
+                Stat stat = Stat.valueOf(resultSet.getString("stat"));
+                int count = resultSet.getInt("count");
+                stats.put(stat, count);
             }
 
             connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
-    public void updateTitle(UUID uuid, Title.Type type, Title.Tier tier) {
-        try {
-            Connection connection = getConnection();
-
-            Optional<Integer> playerIdOptional = getPlayerId(uuid);
-
-            if (playerIdOptional.isPresent()) {
-                int playerId = playerIdOptional.get();
-
-                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE titles_titles " +
-                        "SET tier = ?" +
-                        "WHERE player_id = ? AND type = ?");
-
-                preparedStatement.setString(1, tier.toString());
-                preparedStatement.setInt(2, playerId);
-                preparedStatement.setString(3, type.toString());
-
-                preparedStatement.execute();
-            }
-
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Map<Title.Type, Title.Tier> getTitlesForPlayer(UUID uuid) {
-        try {
-            Connection connection = getConnection();
-
-            Optional<Integer> playerIdOptional = getPlayerId(uuid);
-
-            if (playerIdOptional.isPresent()) {
-                int playerId = playerIdOptional.get();
-
-                PreparedStatement preparedStatement = connection.prepareStatement("SELECT * " +
-                        "FROM titles_titles " +
-                        "WHERE player_id = ?");
-
-                preparedStatement.setInt(1, playerId);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
-
-                Map<Title.Type, Title.Tier> titles = new HashMap<>();
-
-                while (resultSet.next()) {
-                    Title.Type type = Title.Type.valueOf(resultSet.getString("type"));
-                    Title.Tier tier = Title.Tier.valueOf(resultSet.getString("tier"));
-                    titles.put(type, tier);
-                }
-
-                return titles;
-            }
-
-            connection.close();
+            return stats;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -300,24 +154,13 @@ public class MySQLStorage {
         try {
             Connection connection = getConnection();
 
-            Optional<Integer> playerIdOptional = getPlayerId(uuid);
-
-            if (playerIdOptional.isPresent()) {
-                int playerId = playerIdOptional.get();
-
-                Optional<Integer> titleIdOptional = getTitleId(playerId, type);
-
-                if (titleIdOptional.isPresent()) {
-                    int titleId = titleIdOptional.get();
-
-                    PreparedStatement preparedStatement = connection.prepareStatement("UPDATE titles_current_title " +
-                            "SET title_id = ? " +
-                            "WHERE player_id = ?");
-                    preparedStatement.setInt(1, titleId);
-                    preparedStatement.setInt(2, playerId);
-                    preparedStatement.execute();
-                }
-            }
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE titles_players " +
+                    "SET current_title = ? " +
+                    "WHERE uuid = ? " +
+                    "LIMIT 1");
+            preparedStatement.setString(1, type.toString());
+            preparedStatement.setString(2, Utils.uuidToString(uuid));
+            preparedStatement.execute();
 
             connection.close();
         } catch (SQLException e) {
@@ -329,11 +172,9 @@ public class MySQLStorage {
         try {
             Connection connection = getConnection();
 
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT p.*, c.*, t.* " +
-                    "FROM titles_players AS p " +
-                    "INNER JOIN titles_current_title AS c ON p.id = c.player_id " +
-                    "INNER JOIN titles_titles AS t ON t.id = c.title_id " +
-                    "WHERE p.uuid = ? " +
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT current_title " +
+                    "FROM titles_players " +
+                    "WHERE uuid = ? " +
                     "LIMIT 1");
             preparedStatement.setString(1, Utils.uuidToString(uuid));
 
@@ -344,7 +185,7 @@ public class MySQLStorage {
                 return Optional.of(Title.Type.ONLINE_TIME);
             }
 
-            Title.Type type = Title.Type.valueOf(resultSet.getString("type"));
+            Title.Type type = Title.Type.valueOf(resultSet.getString("current_title"));
 
             connection.close();
 

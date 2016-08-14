@@ -12,17 +12,22 @@ import java.util.UUID;
 public class TitlesPlayerFactory {
 
     public static TitlesPlayer createTitlesPlayer(UUID uuid) {
+        // Get player's current title from database
         Optional<Title.Type> currentTitleType = Titles.instance.storage.getCurrentTitleType(uuid);
 
+        // Get player's stats from database
+        Map<Stat, Integer> stats = Titles.instance.storage.getStatsForPlayer(uuid);
+
+        // Create new TitlesPlayer
         TitlesPlayer titlesPlayer = new TitlesPlayer(uuid, currentTitleType.isPresent() ? currentTitleType.get() : Title.Type.ONLINE_TIME);
 
-        Map<Title.Type, Title.Tier> titleTiers = Titles.instance.storage.getTitlesForPlayer(uuid);
+        // Add their stats to their TitlesPlayer
+        stats.forEach(titlesPlayer::addStat);
 
-        Map<Stat, Integer> stats = new HashMap<>();
+        // Check their titles to set their title ranks based on their stats
+        titlesPlayer.checkTitles();
 
-        titleTiers.forEach(titlesPlayer::setTitleTier);
-        stats.forEach(titlesPlayer::setStat);
-
+        // Return the complete TitlesPlayer object
         return titlesPlayer;
     }
 }

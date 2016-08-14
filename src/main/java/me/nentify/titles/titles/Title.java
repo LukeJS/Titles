@@ -26,15 +26,9 @@ import org.spongepowered.api.world.extent.Extent;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public abstract class Title {
-
-    private static int titleId = 0;
-
-    public static final int BLOCK_BREAKER = titleId++;
 
     private Type type;
     private String name;
@@ -61,23 +55,8 @@ public abstract class Title {
     public void promote(UUID uuid) {
         Optional<Tier> nextTier = tier.getNextTier();
 
-        if (nextTier.isPresent()) {
+        if (nextTier.isPresent())
             tier = nextTier.get();
-
-            // Update MySQL data asynchronously
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                if (tier == Tier.NOOB) {
-                    Titles.instance.storage.insertTitle(uuid, getType());
-                } else {
-                    Titles.instance.storage.updateTitle(uuid, getType(), tier);
-                }
-            });
-        }
-    }
-
-    public void setTier(Tier tier) {
-        this.tier = tier;
     }
 
     public boolean isMaxTier() {
@@ -240,11 +219,18 @@ public abstract class Title {
         extent.spawnEntity(firework, Cause.source(EntitySpawnCause.builder().entity(firework).type(SpawnTypes.PLUGIN).build()).build());
     }
 
-    public void check(TitlesPlayer titlesPlayer, Player player) {
-        if (!isMaxTier() && canRankUp(titlesPlayer)) {
-            promote(player.getUniqueId());
-            sendMessage(player);
-            spawnFireworks(player);
+    public void check(TitlesPlayer titlesPlayer, boolean effects) {
+        while (!isMaxTier() && canRankUp(titlesPlayer)) {
+            promote(titlesPlayer.getUUID());
+
+            if (effects) {
+                Optional<Player> player = Sponge.getServer().getPlayer(titlesPlayer.getUUID());
+
+                if (player.isPresent()) {
+                    sendMessage(player.get());
+                    spawnFireworks(player.get());
+                }
+            }
         }
     }
 
