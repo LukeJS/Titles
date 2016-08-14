@@ -280,6 +280,7 @@ public abstract class Title {
     public enum Type {
         BLOCK_BREAKER,
         ONLINE_TIME,
-        CHATTY;
+        CHATTY,
+        MOB_KILLER;
     }
 }

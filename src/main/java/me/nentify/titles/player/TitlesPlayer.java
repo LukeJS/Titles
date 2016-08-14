@@ -33,8 +33,10 @@ public class TitlesPlayer {
     public TitlesPlayer(UUID uuid, Title.Type currentTitleType) {
         this.uuid = uuid;
 
-        addTitle(new BlockBreakerTitle(Title.Tier.UNRANKED));
+        // Default title
         addTitle(new OnlineTimeTitle(Title.Tier.NOOB));
+
+        addTitle(new BlockBreakerTitle(Title.Tier.UNRANKED));
         addTitle(new ChattyTitle(Title.Tier.UNRANKED));
 
         OnlineTrackerTask onlineTrackerTask = new OnlineTrackerTask(this);
