@@ -281,6 +281,14 @@ public abstract class Title {
         BLOCK_BREAKER,
         ONLINE_TIME,
         CHATTY,
-        MOB_KILLER;
+        AGGRESSIVE_MOB_KILLER,
+        ENGINEER,
+        TRAVELLER,
+        SAILOR,
+        ARTIST,
+        CODER,
+        BUILDER,
+        FARMER,
+        FISHER;
     }
 }

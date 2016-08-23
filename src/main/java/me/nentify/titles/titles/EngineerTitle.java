@@ -8,18 +8,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class ChattyTitle extends Title {
+public class EngineerTitle extends Title {
 
-    public ChattyTitle(Tier tier) {
-        super(Type.CHATTY, "Chatty", tier);
+    public EngineerTitle(Tier tier) {
+        super(Type.ENGINEER, "Engineer", tier);
     }
 
     @Override
     boolean canRankUp(TitlesPlayer titlesPlayer) {
-        Optional<Integer> chatMessages = titlesPlayer.getStat(Stat.CHAT_MESSAGES);
+        Optional<Integer> engineeredStat = titlesPlayer.getStat(Stat.ENGINEER);
 
-        if (chatMessages.isPresent()) {
-            return Maths.exponential(chatMessages.get(), getTier().getTierRank(), Maths.SMALL_MULTI);
+        if (engineeredStat.isPresent()) {
+            return Maths.exponential(engineeredStat.get(), getTier().getTierRank(), Maths.BIG_MULTI);
         }
 
         return false;
@@ -27,6 +27,6 @@ public class ChattyTitle extends Title {
 
     @Override
     public List<Stat> getRequiredStats() {
-        return Collections.singletonList(Stat.CHAT_MESSAGES);
+        return Collections.singletonList(Stat.ENGINEER);
     }
 }

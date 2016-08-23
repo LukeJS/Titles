@@ -3,10 +3,7 @@ package me.nentify.titles.player;
 import me.nentify.titles.Titles;
 import me.nentify.titles.stats.Stat;
 import me.nentify.titles.tasks.OnlineTrackerTask;
-import me.nentify.titles.titles.BlockBreakerTitle;
-import me.nentify.titles.titles.ChattyTitle;
-import me.nentify.titles.titles.OnlineTimeTitle;
-import me.nentify.titles.titles.Title;
+import me.nentify.titles.titles.*;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 
@@ -38,6 +35,7 @@ public class TitlesPlayer {
 
         addTitle(new BlockBreakerTitle(Title.Tier.UNRANKED));
         addTitle(new ChattyTitle(Title.Tier.UNRANKED));
+        addTitle(new AggressiveMobKillerTitle(Title.Tier.UNRANKED));
 
         OnlineTrackerTask onlineTrackerTask = new OnlineTrackerTask(this);
         task = Sponge.getScheduler().createTaskBuilder()
