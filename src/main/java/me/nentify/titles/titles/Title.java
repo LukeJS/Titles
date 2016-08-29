@@ -48,11 +48,19 @@ public abstract class Title {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public Tier getTier() {
         return tier;
     }
 
-    public void promote(UUID uuid) {
+    public void setTier(Tier tier) {
+        this.tier = tier;
+    }
+
+    public void promote() {
         Optional<Tier> nextTier = tier.getNextTier();
 
         if (nextTier.isPresent())
@@ -221,7 +229,7 @@ public abstract class Title {
 
     public void check(TitlesPlayer titlesPlayer, boolean effects) {
         while (!isMaxTier() && canRankUp(titlesPlayer)) {
-            promote(titlesPlayer.getUUID());
+            promote();
 
             if (effects) {
                 Optional<Player> player = Sponge.getServer().getPlayer(titlesPlayer.getUUID());
@@ -283,12 +291,14 @@ public abstract class Title {
         CHATTY,
         AGGRESSIVE_MOB_KILLER,
         ENGINEER,
-        TRAVELLER,
-        SAILOR,
         ARTIST,
         CODER,
         BUILDER,
         FARMER,
-        FISHER;
+        FISHER,
+
+        TEST_PERMISSION,
+
+        CUSTOM_PREFIX
     }
 }

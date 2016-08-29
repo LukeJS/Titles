@@ -19,7 +19,7 @@ public class ChattyTitle extends Title {
         Optional<Integer> chatMessages = titlesPlayer.getStat(Stat.CHAT_MESSAGES);
 
         if (chatMessages.isPresent()) {
-            return Maths.exponential(chatMessages.get(), getTier().getTierRank(), Maths.SMALL_MULTI);
+            return Maths.exponential(getTier().getTierRank(), chatMessages.get(), 20);
         }
 
         return false;

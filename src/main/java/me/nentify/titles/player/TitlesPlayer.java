@@ -6,6 +6,7 @@ import me.nentify.titles.tasks.OnlineTrackerTask;
 import me.nentify.titles.titles.*;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,10 +37,21 @@ public class TitlesPlayer {
         addTitle(new BlockBreakerTitle(Title.Tier.UNRANKED));
         addTitle(new ChattyTitle(Title.Tier.UNRANKED));
         addTitle(new AggressiveMobKillerTitle(Title.Tier.UNRANKED));
+        addTitle(new ArtistTitle(Title.Tier.UNRANKED));
+        addTitle(new BlockPlacerTitle(Title.Tier.UNRANKED));
+        addTitle(new CoderTitle(Title.Tier.UNRANKED));
+        addTitle(new EngineerTitle(Title.Tier.UNRANKED));
+        addTitle(new FarmerTitle(Title.Tier.UNRANKED));
+        addTitle(new FisherTitle(Title.Tier.UNRANKED));
+
+        addTitle(new PermissionTitle(Title.Type.TEST_PERMISSION, "Test Perm", "titles.test-permission", TextColors.AQUA));
+
+        addTitle(new CustomTitle());
 
         OnlineTrackerTask onlineTrackerTask = new OnlineTrackerTask(this);
         task = Sponge.getScheduler().createTaskBuilder()
                 .execute(onlineTrackerTask)
+                .delay(1, TimeUnit.MINUTES)
                 .interval(1, TimeUnit.MINUTES)
                 .name("Online Time Tracker: " + uuid)
                 .submit(Titles.instance);

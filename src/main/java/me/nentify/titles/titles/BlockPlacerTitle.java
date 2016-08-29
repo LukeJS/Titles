@@ -18,7 +18,7 @@ public class BlockPlacerTitle extends Title {
         Optional<Integer> stat = titlesPlayer.getStat(Stat.BLOCKS_PLACED);
 
         if (stat.isPresent()) {
-            return Maths.exponential(getTier().getTierRank(), stat.get(), Maths.BIG_MULTI);
+            return Maths.exponential(getTier().getTierRank(), stat.get(), Maths.BIGGER_MULTI);
         }
 
         return false;

@@ -1,5 +1,6 @@
 package me.nentify.titles.titles;
 
+import me.nentify.titles.Maths;
 import me.nentify.titles.player.TitlesPlayer;
 import me.nentify.titles.stats.Stat;
 
@@ -15,12 +16,10 @@ public class BlockBreakerTitle extends Title {
 
     @Override
     boolean canRankUp(TitlesPlayer titlesPlayer) {
-        Optional<Integer> blocksBroken = titlesPlayer.getStat(Stat.BLOCKS_BROKEN);
+        Optional<Integer> stat = titlesPlayer.getStat(Stat.BLOCKS_BROKEN);
 
-        if (blocksBroken.isPresent()) {
-            int blocksForRankup = (int) (50 * Math.pow(4, getTier().getTierRank()));
-
-            return blocksBroken.get() >= blocksForRankup;
+        if (stat.isPresent()) {
+            return Maths.exponential(getTier().getTierRank(), stat.get(), Maths.BIGGER_MULTI);
         }
 
         return false;

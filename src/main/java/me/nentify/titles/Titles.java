@@ -31,12 +31,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
-@Plugin(id = Titles.PLUGIN_ID, name = Titles.PLUGIN_NAME, version = Titles.PLUGIN_VERSION)
+@Plugin(id = Titles.PLUGIN_ID, name = Titles.PLUGIN_NAME)
 public class Titles {
 
     public static final String PLUGIN_ID = "titles";
     public static final String PLUGIN_NAME = "Titles";
-    public static final String PLUGIN_VERSION = "1.1.0";
 
     public static Titles instance;
 
@@ -54,8 +53,6 @@ public class Titles {
 
     @Listener
     public void onPreIinit(GamePreInitializationEvent event) {
-        logger.info("Starting " + PLUGIN_NAME + " v" + PLUGIN_VERSION);
-
         instance = this;
 
         try {
